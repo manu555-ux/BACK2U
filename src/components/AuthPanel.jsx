@@ -64,7 +64,7 @@ export function AuthPanel({ onClose, onSignIn }) {
 
       setOtpSent(true);
       setMessage(
-        `If email delivery is configured for OTP, a verification code will be sent to ${normalizedEmail}.`
+        `Check your inbox for a secure verification link sent to ${normalizedEmail}.`
       );
     } catch (authError) {
       setError(
@@ -149,7 +149,7 @@ export function AuthPanel({ onClose, onSignIn }) {
 
         <p className="auth-intro">
           {otpSent
-            ? `Enter the 6-digit verification code for ${email.trim().toLowerCase()}.`
+            ? `Open the secure link sent to ${email.trim().toLowerCase()} to verify your email and sign in.`
             : 'Sign in with your college email to report an item, manage your reports, and verify an ownership claim.'}
         </p>
 
@@ -172,7 +172,7 @@ export function AuthPanel({ onClose, onSignIn }) {
               <strong>Secure email verification</strong>
               <p>
                 {otpSent
-                  ? 'Use the code sent to your college email. Never share your code with anyone.'
+                  ? 'Check your college inbox and click the verification link. Never share that link with anyone.'
                   : 'We will ask you to verify your college email before signing in.'}
               </p>
             </div>
@@ -221,7 +221,7 @@ export function AuthPanel({ onClose, onSignIn }) {
               {loading ? (
                 <>
                   <LoaderCircle className="auth-spinner" size={16} />
-                  Sending code…
+                  Sending link…
                 </>
               ) : demoMode && !supabaseConfigured ? (
                 <>
@@ -229,7 +229,7 @@ export function AuthPanel({ onClose, onSignIn }) {
                 </>
               ) : (
                 <>
-                  Send verification code{' '}
+                  Send verification link{' '}
                   <ArrowLeft
                     className="auth-arrow-forward"
                     size={16}
@@ -239,63 +239,15 @@ export function AuthPanel({ onClose, onSignIn }) {
             </button>
           </form>
         ) : (
-          <form className="auth-form" onSubmit={handleVerifyOtp}>
-            <label className="field-label" htmlFor="account-otp">
-              6-digit verification code
-            </label>
-
-            <input
-              id="account-otp"
-              className="field"
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6}"
-              minLength={6}
-              maxLength={6}
-              required
-              value={otp}
-              onChange={(event) =>
-                setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))
-              }
-              placeholder="Enter 6-digit code"
-              aria-describedby="otp-help"
-            />
-
-            <p id="otp-help" className="auth-intro">
-              Enter the code from your email. Codes expire, so use the
-              latest one you requested.
-            </p>
-
-            {error && (
-              <p className="auth-error" role="alert">
-                {error}
-              </p>
-            )}
-
-            {message && (
-              <div className="auth-message" role="status">
-                <CheckCircle2 size={19} />
-                <span>{message}</span>
-              </div>
-            )}
-
-            <button
-              className="button button-dark button-full"
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <LoaderCircle className="auth-spinner" size={16} />
-                  Verifying…
-                </>
-              ) : (
-                <>
-                  Verify and sign in <LockKeyhole size={16} />
-                </>
-              )}
-            </button>
+          <div className="auth-form">
+            <div className="auth-message" role="status">
+              <Mail size={19} />
+              <span>
+                Check your college email and click the secure verification
+                link. After verification, BACK2U should sign you in
+                automatically when the link opens this website.
+              </span>
+            </div>
 
             <button
               className="auth-back"
@@ -305,7 +257,7 @@ export function AuthPanel({ onClose, onSignIn }) {
             >
               <ArrowLeft size={16} /> Use a different email
             </button>
-          </form>
+          </div>
         )}
 
         <div className="auth-privacy">
