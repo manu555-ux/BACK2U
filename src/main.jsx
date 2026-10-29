@@ -108,20 +108,50 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
 
+  // Load the signed-in user's role from the protected profiles table.
+  const loadProfileRole = async (userId) => {
+    if (!supabase || !userId) return;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Could not load profile role:", error.message);
+      setRole("student");
+      return;
+    }
+
+    setRole(["student", "moderator", "admin"].includes(data?.role) ? data.role : "student");
+  };
+
   // Restore genuine Supabase sessions and react to email-link sign-in/sign-out.
   useEffect(() => {
     if (!supabaseConfigured || !supabase) return undefined;
     let alive = true;
+
     supabase.auth.getSession().then(({ data, error }) => {
       if (!alive || error) return;
       const sessionUser = data?.session?.user;
-      if (sessionUser) setUser({ id: sessionUser.id, email: sessionUser.email, demo: false });
+      if (sessionUser) {
+        setUser({ id: sessionUser.id, email: sessionUser.email, demo: false });
+        loadProfileRole(sessionUser.id);
+      }
     });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!alive) return;
+
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email, demo: false });
         setAuthOpen(false);
+
+        // Defer the profile query until the auth callback finishes.
+        setTimeout(() => {
+          if (alive) loadProfileRole(session.user.id);
+        }, 0);
+
         if (event === "SIGNED_IN") {
           setNotice(`Signed in successfully as ${session.user.email}.`);
           if (pendingPageRef.current) {
@@ -134,7 +164,11 @@ function App() {
         setRole("student");
       }
     });
-    return () => { alive = false; subscription.unsubscribe(); };
+
+    return () => {
+      alive = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Frontend-only prototype: demo records are stored in this browser's localStorage.
